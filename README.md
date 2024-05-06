@@ -18,23 +18,12 @@
 
 
 ## Installation
-### Install using ```make```
-```bash
-# Clone the repo
-$ git clone https://github.com/sdushantha/kunst
-
-# Change your current directory to kunst
-$ cd kunst
-
-# Install it
-$ sudo make install
-```
 ### Install it locally
 
 ```bash
 # Download the kunst source code, save as kunst, make it executeable
 # and then move it to ~/.local/bin
-$ curl -L git.io/raw-kunst > kunst && chmod +x kunst && mv kunst ~/.local/bin
+$ curl url https://raw.githubusercontent.com/R0CKH0PP3R/kunst/master/kunst > kunst && chmod +x kunst && mv kunst $HOME/.local/bin
 ```
 
 ## Usage
@@ -71,12 +60,6 @@ export KUNST_POSITION="+0+0"
 # Where your music is located
 export KUNST_MUSIC_DIR="/home/username/Music/"
 ```
-
-<p align="center">
-<a href="https://www.reddit.com/user/SpicyBroseph">
-<img src="https://user-images.githubusercontent.com/27065646/53107999-89ec9480-3536-11e9-98a2-9ff416bf4589.png">
-</a>
-</p>
 
 
 ## License
