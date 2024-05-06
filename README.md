@@ -17,15 +17,6 @@
 - ```mpd```
 
 
-## Installation
-### Install it locally
-
-```bash
-# Download the kunst source code, save as kunst, make it executeable
-# and then move it to ~/.local/bin
-$ curl url https://raw.githubusercontent.com/R0CKH0PP3R/kunst/master/kunst > kunst && chmod +x kunst && mv kunst $HOME/.local/bin
-```
-
 ## Usage
 
 ```bash
