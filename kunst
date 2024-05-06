@@ -6,11 +6,10 @@
 #
 # Dependencies: nsxiv, imagemagick, bash, ffmpeg, mpc, jq, mpd
 
-
 VERSION=1.3.4
 TMP=${TMPDIR:-/tmp}
 COVER=$TMP/kunst.jpg
-MUSIC_DIR="${KUNST_MUSIC_DIR:-~/Music}"
+MUSIC_DIR="${KUNST_MUSIC_DIR:-$HOME/Music}"
 SIZE="${KUNST_SIZE:-250x250}"
 POSITION="${KUNST_POSITION:-+0+0}"
 ONLINE_ALBUM_ART=""
@@ -45,7 +44,6 @@ logError() {
     echo "$PROG_NAME: $1" >&2
     exit 1
 }
-
 
 # Parse the arguments
 options=$(getopt -o h --long 'position:,size:,music_dir:,version,force-online,verbose,help' -- "$@")
@@ -94,7 +92,6 @@ read -r -d '' MUSIC_NOTE << EOF
 iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJESURBVGhD7Zg/axRRFMVXAtpYphEVREKClnHfJI0MmReSfAC3tRejhaBgo70fwN7aD2BvEU0gfztbu5AqMxNjoVnvG87KZXy7z5m5dxLI/OCw8Pade+7M3n3Dbq+jo6OjY8RwMJhKk+hhlph3eRJ9w/LF5jCOr1PTj6jpD7mNjkjDkbDl4vFjpX87teZJlkSfSD9501zYfv5QJ1fyZHGexuJtZs12ZqMzX8NlwX4+nK3NXMutWaOm39Nd/u5rMCSUao80fjBNwY+p8Y+krNxQVaGsLsfWzFLYS2r4M30Rf5WbaCJE6OILlhIidPEFSwkRuviCpYQIXXzB1WX26bR6ky4v3OPriNCFB1YRHa079Pr6eKk/h1IFfA+WdOGBk+QeXtT0Ft3pV6e2fxf2f+AeLOnCA8tC0xv09H1xGi/cgWUi3I8lXXigEzX8u3gmWPP8JI5uYdt/w2thSRceSM0/zVfnb+CtWvB6WNJFOlC6XhDpQOl6QaQDpesFkQ6UrhdEOlC6XpA6gcPB/avumKXnxCadXHkha766tTr1GlE18CRZvEmN7nHfOMGiS5XA4mdmYg64Z5Jg06VKYHlEQoKtOVIz6zx8f0iwNUNyZt2F+3zjBFt9pGe22gWYFLb6lEckJNjGUmWEssR8ga0+0jNL9Z75fD7Rp7UOW32kZxb/1u37vFyUu+sODtjqozGzxaFADfprFM3vuD3Y3gytmf17LJPHXbgTNb5BWhe58yNan1lpWp9ZDVqdWS1am9mOjo7LRq/3B1ESKyYUVquzAAAAAElFTkSuQmCC
 EOF
 
-
 is_connected() {
     # Check if internet is connected. We are using api.deezer.com to test
     # if the internet is connected because if api.deezer.com is down or
@@ -106,7 +103,6 @@ is_connected() {
         connected=false
     fi
 }
-
 
 get_cover_online() {
     # Check if connected to internet
@@ -127,7 +123,7 @@ get_cover_online() {
     log "fetching $API_URL"
     # Extract the albumcover from the json returned
     JSON=$(curl -s "$API_URL")
-    ALBUM=$(echo "$JSON" | jq -r '.tracks.data[0].album.picture_big' | sed 's/null//');
+    ALBUM=$(echo "$JSON" | jq -r '.tracks.data[0].album.cover_big' | sed 's/null//');
     ARTIST=$(echo "$JSON" | jq -r '.tracks.data[0].artist.picture_big' | sed 's/null//');
     IMG_URL="${ALBUM:-$ARTIST}"
 
@@ -139,7 +135,6 @@ get_cover_online() {
         curl -o "$COVER" -s "$IMG_URL"
         ARTLESS=false
     fi
-
 }
 
 find_album_art(){
@@ -153,7 +148,7 @@ find_album_art(){
 
     # Extract the album art from the mp3 file and dont show the messsy
     # output of ffmpeg
-    ffmpeg -i "$MUSIC_DIR$(mpc current -f %file%)" "$COVER" -y &> /dev/null
+    ffmpeg -i "${MUSIC_DIR}/$(mpc current -f %file%)" "$COVER" -y &> /dev/null
 
     # Get the status of the previous command
     STATUS=$?
@@ -173,7 +168,7 @@ find_album_art(){
                 STATUS=0
                 ARTLESS=false
                 convert "$CANDIDATE" $COVER &> /dev/null
-                log "found cover.png"
+                log "Converted cover to jpg"
             fi
         done
     fi
@@ -184,15 +179,18 @@ find_album_art(){
     fi
 }
 
-
 update_cover() {
     find_album_art
 
     if [ "$ARTLESS" == false ]; then
         convert "$COVER" -resize "$SIZE" "$COVER" &> /dev/null
         log "resized album art to $SIZE"
+    else
+        # Decode the base64 encoded image and save it
+        echo "$MUSIC_NOTE" | base64 --decode | \
+            convert - -background white -alpha background -flatten $COVER
+        log "decoded ARTLESS base64 image & converted to jpg"
     fi
-
 }
 
 pre_exit() {
@@ -202,12 +200,11 @@ pre_exit() {
     # exit kunst, an error will be shown
     # from kill and we dont want that
     kill -9 "$(cat "$TMP/kunst.pid")" &>/dev/null
-
 }
 
 main() {
-
     dependencies=(nsxiv convert bash ffmpeg mpc jq mpd)
+    
     for dependency in "${dependencies[@]}"; do
         type -p "$dependency" &>/dev/null || {
             logError "could not find '${dependency}', is it installed?"
@@ -219,17 +216,6 @@ main() {
 
     while true; do
         update_cover
-
-        if [ "$ARTLESS" == true ];then
-            # Dhange the path to COVER because the music note
-            # image is a png not jpg
-            COVER=$TMP/kunst.png
-
-            # Decode the base64 encoded image and save it
-            # to /tmp/kunst.png
-            echo "$MUSIC_NOTE" | base64 --decode > "$COVER"
-        fi
-
         log "swapped album art to $(mpc current)"
 
         if [ "$FIRST_RUN" == true ]; then
@@ -244,7 +230,7 @@ main() {
         fi
 
         # Waiting for an event from mpd; play/pause/next/previous
-        # this is lets kunst use less CPU :)
+        # this lets kunst use less CPU :)
         while true; do
             mpc idle player &>/dev/null && (mpc status | grep "\[playing\]" &>/dev/null) && break
         done
