@@ -8,7 +8,7 @@
 
 VERSION=1.3.4
 TMP=${TMPDIR:-/tmp}
-COVER=$TMP/kunst.jpg
+COVER=$TMP/kunst.png
 MUSIC_DIR="${KUNST_MUSIC_DIR:-$HOME/Music}"
 SIZE="${KUNST_SIZE:-250x250}"
 POSITION="${KUNST_POSITION:-+0+0}"
@@ -168,7 +168,7 @@ find_album_art(){
                 STATUS=0
                 ARTLESS=false
                 convert "$CANDIDATE" $COVER &> /dev/null
-                log "Converted cover to jpg"
+                log "Cover found and converted"
             fi
         done
     fi
@@ -187,9 +187,8 @@ update_cover() {
         log "resized album art to $SIZE"
     else
         # Decode the base64 encoded image and save it
-        echo "$MUSIC_NOTE" | base64 --decode | \
-            convert - -background white -alpha background -flatten $COVER
-        log "decoded ARTLESS base64 image & converted to jpg"
+        echo "$MUSIC_NOTE" | base64 --decode > $COVER
+        log "decoded ARTLESS base64 image to use in absence of cover"
     fi
 }
 
