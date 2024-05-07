@@ -21,7 +21,8 @@
 
 ```bash
 $ kunst --help
-usage: kunst [-h] [--size px] [--music_dir path/to/dir] [--silent] [--version]
+usage: kunst [-h|--help] [--size "px"] [--position "+x+y"]
+             [--music_dir "path/to/dir"] [--verbose] [--silent] [--version]
 
 ┬┌─┬ ┬┌┐┌┌─┐┌┬┐
 ├┴┐│ ││││└─┐ │
@@ -33,8 +34,10 @@ optional arguments:
    --size                what size to display the album art in
    --position            the position where the album art should be displayed
    --music_dir           the music directory which MPD plays from
-   --silent              dont show the output
+   --verbose             show the output
+   --force-online        force getting cover from the internet
    --version             show the version of kunst you are using
+   --silent              update cover, but don't display with nsxiv
 ```
 
 
