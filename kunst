@@ -14,11 +14,12 @@ SIZE="${KUNST_SIZE:-250x250}"
 POSITION="${KUNST_POSITION:-+0+0}"
 ONLINE_ALBUM_ART=""
 PROG_NAME=$(basename "$0")
+SILENT=false
 
 show_help() {
     printf "%s" "\
 usage: kunst [-h|--help] [--size \"px\"] [--position \"+x+y\"]
-             [--music_dir \"path/to/dir\"] [--verbose] [--version]
+             [--music_dir \"path/to/dir\"] [--verbose] [--silent] [--version]
 
 ┬┌─┬ ┬┌┐┌┌─┐┌┬┐
 ├┴┐│ ││││└─┐ │
@@ -33,6 +34,7 @@ optional arguments:
    --verbose             show the output
    --force-online        force getting cover from the internet
    --version             show the version of kunst you are using
+   --silent              update cover, but don't display with nsxiv
 "
 }
 
@@ -46,7 +48,7 @@ logError() {
 }
 
 # Parse the arguments
-options=$(getopt -o h --long 'position:,size:,music_dir:,version,force-online,verbose,help' -- "$@")
+options=$(getopt -o h --long 'position:,size:,music_dir:,version,force-online,verbose,silent,help' -- "$@")
 eval set -- "$options"
 
 while true; do
@@ -76,6 +78,9 @@ while true; do
             ;;
         --verbose)
             VERBOSE=true
+            ;; 
+        --silent)
+            SILENT=true
             ;;
         --)
             shift
@@ -210,15 +215,13 @@ main() {
         }
     done
 
-    # Flag to run some commands only once in the loop
-    FIRST_RUN=true
-
     while true; do
         update_cover
         log "swapped album art to $(mpc current)"
 
-        if [ "$FIRST_RUN" == true ]; then
-            FIRST_RUN=false
+        if [ "$SILENT" == false ]; then
+            # Flag to run the following commands only once
+            SILENT=true 
 
             # Display the album art using nsxiv
             nsxiv -g "$SIZE$POSITION" -b "$COVER" -N "Kunst" &
