@@ -6,7 +6,7 @@
 #
 # Dependencies: nsxiv, imagemagick, bash, ffmpeg, mpc, jq, mpd
 
-VERSION=1.3.4
+VERSION=1.4.0
 TMP=${TMPDIR:-/tmp}
 COVER=$TMP/kunst.png
 MUSIC_DIR="${KUNST_MUSIC_DIR:-$HOME/Music}"
