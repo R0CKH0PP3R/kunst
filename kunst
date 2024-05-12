@@ -6,20 +6,22 @@
 #
 # Dependencies: nsxiv, imagemagick, bash, ffmpeg, mpc, jq, mpd
 
-VERSION=1.4.0
+VERSION=1.4.1
 TMP=${TMPDIR:-/tmp}
 COVER=$TMP/kunst.png
 MUSIC_DIR="${KUNST_MUSIC_DIR:-$HOME/Music}"
 SIZE="${KUNST_SIZE:-250x250}"
 POSITION="${KUNST_POSITION:-+0+0}"
 ONLINE_ALBUM_ART=""
+CUSTOM_FALLBACK=""
 PROG_NAME=$(basename "$0")
 SILENT=false
 
 show_help() {
     printf "%s" "\
 usage: kunst [-h|--help] [--size \"px\"] [--position \"+x+y\"]
-             [--music_dir \"path/to/dir\"] [--verbose] [--silent] [--version]
+             [--music_dir \"path/to/dir\"] [--verbose] [--force-online] 
+             [--silent] [--version] [--custom-artwork \"path/to/art\"] 
 
 ┬┌─┬ ┬┌┐┌┌─┐┌┬┐
 ├┴┐│ ││││└─┐ │
@@ -35,6 +37,7 @@ optional arguments:
    --force-online        force getting cover from the internet
    --version             show the version of kunst you are using
    --silent              update cover, but don't display with nsxiv
+   --custom-fallback     path to custom fallback, used instead of music note
 "
 }
 
@@ -48,7 +51,7 @@ logError() {
 }
 
 # Parse the arguments
-options=$(getopt -o h --long 'position:,size:,music_dir:,version,force-online,verbose,silent,help' -- "$@")
+options=$(getopt -o h --long 'position:,size:,music_dir:,version,force-online,verbose,silent,custom-fallback:,help' -- "$@")
 eval set -- "$options"
 
 while true; do
@@ -82,6 +85,10 @@ while true; do
         --silent)
             SILENT=true
             ;;
+        --fallback-art)
+            shift;
+            CUSTOM_FALLBACK=$1
+            ;;
         --)
             shift
             break
@@ -100,7 +107,7 @@ EOF
 is_connected() {
     # Check if internet is connected. We are using api.deezer.com to test
     # if the internet is connected because if api.deezer.com is down or
-    # the internet is not connected this script will work as expected
+    # the internet is not connected this script will not work as expected
     if ping -q -c 1 -W 1 api.deezer.com >/dev/null; then
         connected=true
     else
@@ -190,9 +197,13 @@ update_cover() {
     if [ "$ARTLESS" == false ]; then
         convert "$COVER" -resize "$SIZE" "$COVER" &> /dev/null
         log "resized album art to $SIZE"
+    elif [ -f "$CUSTOM_FALLBACK" ]; then
+        cp $CUSTOM_FALLBACK $COVER
+        log "used fallback artwork in absence of cover"
     else
         # Decode the base64 encoded image and save it
-        echo "$MUSIC_NOTE" | base64 --decode > $COVER
+        echo "$MUSIC_NOTE" | base64 --decode | \
+            convert - -gravity center -extent $SIZE $COVER
         log "decoded ARTLESS base64 image to use in absence of cover"
     fi
 }
