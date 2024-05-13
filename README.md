@@ -37,7 +37,7 @@ optional arguments:
    --verbose             show the output
    --force-online        force getting cover from the internet
    --version             show the version of kunst you are using
-   --silent              update cover, but don't display with nsxiv
+   --silent              update cover, but dont display with nsxiv
    --custom-fallback     path to custom fallback, used instead of music note
 ```
 
